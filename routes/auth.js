@@ -2,6 +2,7 @@ const express = require('express');
 const router  = express.Router();
 
 const bcrypt = require("bcrypt");
+const passport = require("passport");
 
 const User = require('../models/User');
 
@@ -33,32 +34,41 @@ router.get('/login', (req, res) => {
   res.render('login');
 })
 
-router.post('/login', (req, res) => {
-  let currentUser;
+// router.post('/login', (req, res) => {
+//   let currentUser;
 
-  User.findOne({username: req.body.username})
-    .then(user => {
-      if(!user) {
-        res.send("user not found");
-        return
-      }
-      currentUser = user;
-      return bcrypt.compare(req.body.password, user.password)
-    })
-    .then(passwordCorrect => {
-      if(passwordCorrect) {
-        req.session.currentUser = currentUser
-        res.send("the password is correct")
-      } else {
-        res.send("incorrect password");
-      }
-    })
-})
+//   User.findOne({username: req.body.username})
+//     .then(user => {
+//       if(!user) {
+//         res.send("user not found");
+//         return
+//       }
+//       currentUser = user;
+//       return bcrypt.compare(req.body.password, user.password)
+//     })
+//     .then(passwordCorrect => {
+//       if(passwordCorrect) {
+//         req.session.currentUser = currentUser
+//         res.send("the password is correct")
+//       } else {
+//         res.send("incorrect password");
+//       }
+//     })
+// })
+
+router.post('/login', passport.authenticate("local", {
+  successRedirect: "/members",
+  failureRedirect: '/auth/login'
+}))
+
+// router.get('/logout', (req, res) => {
+//   req.session.destroy(err => {
+//     res.redirect('/auth/login');
+//   })
+// })
 
 router.get('/logout', (req, res) => {
-  req.session.destroy(err => {
-    res.redirect('/auth/login');
-  })
+  req.logout();
+  res.redirect('/auth/login');
 })
-
 module.exports = router;
